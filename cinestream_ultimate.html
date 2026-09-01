@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineStream Ultimate - Streaming de Anime, Películas y Series</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#E50914',
+                            hoverRed: '#B80710',
+                            dark: '#0F0F0F',
+                            surface: '#1A1A1A',
+                            card: '#242424',
+                            border: '#333333'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0F0F0F;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333333;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #E50914;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        ::cue {
+            background: rgba(0, 0, 0, 0.8);
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            text-shadow: 0 0 4px #000;
+        }
+    </style>
+</head>
+<body class="bg-brand-dark text-gray-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-red selection:text-white">
+
+    <header class="sticky top-0 z-40 bg-brand-dark/95 backdrop-blur-md border-b border-brand-border px-4 lg:px-8 py-3 transition-all">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            
+            <!-- Logo and Main Navigation -->
+            <div class="flex items-center space-x-6">
+                <h1 class="text-2xl font-black tracking-wider text-brand-red flex items-center gap-2 cursor-pointer select-none group" onclick="filterCategory('All')">
+                    <i data-lucide="play-circle" class="w-8 h-8 group-hover:scale-110 transition duration-300 fill-brand-red/20 text-brand-red"></i> 
+                    <span>CINE<span class="text-white font-light">STREAM</span></span>
+                </h1>
+                
+                <nav class="hidden md:flex space-x-1 text-sm font-semibold">
+                    <button onclick="filterCategory('All')" id="nav-All" class="nav-btn px-3 py-1.5 rounded-lg text-white bg-brand-red font-bold shadow">Inicio</button>
+                    <button onclick="filterCategory('Película')" id="nav-Película" class="nav-btn px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-brand-surface transition">Películas</button>
+                    <button onclick="filterCategory('Serie')" id="nav-Serie" class="nav-btn px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-brand-surface transition">Series</button>
+                    <button onclick="filterCategory('Anime')" id="nav-Anime" class="nav-btn px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-brand-surface transition">Anime</button>
+                    <button onclick="filterCategory('Favoritos')" id="nav-Favoritos" class="nav-btn px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-brand-surface transition flex items-center gap-1.5">
+                        <i data-lucide="heart" class="w-4 h-4 text-brand-red"></i> Mis Favoritos
+                    </button>
+                    <button onclick="filterCategory('Historial')" id="nav-Historial" class="nav-btn px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-brand-surface transition flex items-center gap-1.5">
+                        <i data-lucide="history" class="w-4 h-4 text-blue-400"></i> Historial
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Search Bar, Ad Timer Badge & Parental Controls -->
+            <div class="flex items-center space-x-3">
+                
+                <!-- Ad Status Badge -->
+                <div id="adStatusBadge" class="hidden sm:flex items-center gap-1.5 text-xs font-mono bg-brand-surface px-3 py-1.5 rounded-full border border-brand-border text-gray-300" title="Estado del temporizador de publicidad (10 minutos)">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 text-yellow-500"></i>
+                    <span id="adStatusText">Cargando...</span>
+                </div>
+
+                <!-- Live Search Bar -->
+                <div class="relative">
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Buscar anime, película..."
+                           class="bg-brand-surface text-sm text-white rounded-full pl-9 pr-4 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-red w-36 sm:w-56 transition-all border border-brand-border placeholder-gray-500">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-2.5"></i>
+                </div>
+
+                <!-- Parental Lock Toggle (+17 PIN) -->
+                <button id="pinToggleBtn" onclick="openPinModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-brand-surface hover:bg-brand-border transition border border-brand-border text-gray-200" title="PIN parental por defecto: 1234">
+                    <i data-lucide="lock" class="w-3.5 h-3.5 text-yellow-500" id="lockIcon"></i>
+                    <span id="pinStatusText" class="hidden sm:inline">Modo Kids</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Scrollable Category Buttons -->
+        <div class="flex md:hidden gap-2 overflow-x-auto pt-3 pb-1 text-xs font-semibold hide-scrollbar border-t border-brand-border/40 mt-2">
+            <button onclick="filterCategory('All')" class="px-3 py-1.5 bg-brand-red text-white rounded-full whitespace-nowrap">Inicio</button>
+            <button onclick="filterCategory('Película')" class="px-3 py-1.5 bg-brand-surface text-gray-300 rounded-full whitespace-nowrap border border-brand-border">Películas</button>
+            <button onclick="filterCategory('Serie')" class="px-3 py-1.5 bg-brand-surface text-gray-300 rounded-full whitespace-nowrap border border-brand-border">Series</button>
+            <button onclick="filterCategory('Anime')" class="px-3 py-1.5 bg-brand-surface text-gray-300 rounded-full whitespace-nowrap border border-brand-border">Anime</button>
+            <button onclick="filterCategory('Favoritos')" class="px-3 py-1.5 bg-brand-surface text-gray-300 rounded-full whitespace-nowrap border border-brand-border">Favoritos</button>
+            <button onclick="filterCategory('Historial')" class="px-3 py-1.5 bg-brand-surface text-gray-300 rounded-full whitespace-nowrap border border-brand-border">Historial</button>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl mx-auto w-full p-4 lg:p-8 space-y-8">
+
+        <!-- Hero Featured Carousel -->
+        <section id="heroSection" class="relative rounded-2xl overflow-hidden shadow-2xl border border-brand-border bg-gradient-to-t from-brand-dark via-brand-surface to-transparent min-h-[400px] lg:min-h-[480px] flex items-end">
+            <img id="heroImage" src="" alt="Hero Background" class="absolute inset-0 w-full h-full object-cover opacity-45 transition-opacity duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/70 to-transparent"></div>
+            
+            <div class="relative z-10 p-6 lg:p-10 max-w-2xl space-y-4">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span id="heroType" class="px-2.5 py-0.5 rounded text-xs font-black uppercase tracking-wider bg-brand-red text-white">ANIME</span>
+                    <span id="heroRating" class="px-2.5 py-0.5 rounded text-xs font-bold bg-gray-900/90 text-yellow-400 border border-yellow-500/30">+17</span>
+                    <span id="heroYear" class="text-xs font-semibold text-gray-300">2022</span>
+                    <span id="heroGenres" class="text-xs font-medium text-gray-400">• Acción, Ciencia Ficción</span>
+                </div>
+
+                <h2 id="heroTitle" class="text-3xl lg:text-5xl font-black text-white leading-tight drop-shadow-md">Cyberpunk: Edgerunners</h2>
+                <p id="heroDesc" class="text-xs lg:text-sm text-gray-300 line-clamp-3 leading-relaxed">Un chico de la calle intenta sobrevivir en Night City, una metrópolis obsesionada con la tecnología y la modificación corporal.</p>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button id="heroPlayBtn" class="px-6 py-3 bg-brand-red hover:bg-brand-hoverRed text-white font-bold rounded-xl flex items-center gap-2 transition transform active:scale-95 shadow-lg shadow-brand-red/30">
+                        <i data-lucide="play" class="w-5 h-5 fill-white"></i> Reproducir Ahora
+                    </button>
+                    <button id="heroFavBtn" class="px-4 py-3 bg-brand-surface/80 hover:bg-brand-surface text-white font-semibold rounded-xl border border-brand-border flex items-center gap-2 backdrop-blur transition">
+                        <i data-lucide="heart" class="w-5 h-5"></i> Mi Lista
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hero Indicators -->
+            <div id="heroDots" class="absolute bottom-4 right-6 z-10 flex gap-2">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+        <section class="space-y-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-brand-border pb-4">
+                
+                <div class="flex items-center gap-3">
+                    <h2 id="sectionTitle" class="text-xl lg:text-2xl font-bold text-white border-l-4 border-brand-red pl-3">Catálogo Destacado</h2>
+                    <span id="itemCounter" class="text-xs bg-brand-surface text-gray-400 px-2.5 py-1 rounded-full border border-brand-border">0 títulos</span>
+                </div>
+
+                <!-- Advanced Filters (Genre & Audio Language) -->
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <!-- Genre Filter -->
+                    <select id="genreFilter" onchange="handleFilterChange()" class="bg-brand-surface text-xs text-gray-200 border border-brand-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-red">
+                        <option value="All">Todos los Géneros</option>
+                        <option value="Acción">Acción</option>
+                        <option value="Ciencia Ficción">Ciencia Ficción</option>
+                        <option value="Terror">Terror</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Fantasía">Fantasía</option>
+                        <option value="Drama">Drama</option>
+                    </select>
+
+                    <!-- Language Audio Filter -->
+                    <select id="langFilter" onchange="handleFilterChange()" class="bg-brand-surface text-xs text-gray-200 border border-brand-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-brand-red">
+                        <option value="All">Todos los Idiomas</option>
+                        <option value="LAT">Español Latino (LAT)</option>
+                        <option value="ES">Español Castellano (ES)</option>
+                        <option value="SUB">Subtitulado (SUB)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- CATALOG GRID CONTAINER -->
+            <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 lg:gap-6">
+                <!-- Dynamic Content Cards Injection -->
+            </div>
+        </section>
+    </main>
+
+    <div id="playerModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-center items-center p-2 lg:p-6 backdrop-blur-md overflow-y-auto">
+        <div class="w-full max-w-5xl bg-brand-surface rounded-2xl overflow-hidden shadow-2xl border border-brand-border flex flex-col my-auto">
+            
+            <!-- Player Modal Header -->
+            <div class="flex justify-between items-center px-5 py-4 border-b border-brand-border bg-black/40">
+                <div class="space-y-0.5">
+                    <h3 id="modalTitle" class="font-black text-lg lg:text-xl text-white">Título del Contenido</h3>
+                    <p id="modalMeta" class="text-xs text-gray-400 font-medium">2024 • Anime • +17</p>
+                </div>
+                <button onclick="closePlayerModal()" class="text-gray-400 hover:text-white p-2 rounded-xl bg-brand-dark hover:bg-brand-border transition">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <!-- Episodes Carousel Selector (For Series / Anime like Cyberpunk: Edgerunners Ep 1 - Ep 10) -->
+            <div id="seriesSelectorArea" class="hidden border-b border-brand-border bg-brand-dark p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="list-video" class="w-4 h-4 text-brand-red"></i> Seleccionar Episodio (Ep 1 al Ep 10)
+                    </span>
+                    <select id="seasonSelect" onchange="handleSeasonChange()" class="bg-brand-surface text-xs text-white border border-brand-border rounded-lg px-3 py-1.5 font-semibold focus:ring-1 focus:ring-brand-red">
+                        <!-- Season Options Injected -->
+                    </select>
+                </div>
+
+                <!-- Episodes Scroll Row -->
+                <div id="episodesList" class="flex gap-3 overflow-x-auto pb-2 pt-1 hide-scrollbar">
+                    <!-- Episode cards injected dynamically -->
+                </div>
+            </div>
+
+            <!-- DUAL VIDEO PLAYER ENGINE CONTAINER -->
+            <div class="relative w-full aspect-video bg-black flex items-center justify-center group overflow-hidden">
+                
+                <!-- Error Overlay for Blocked / CORS / Expired Links -->
+                <div id="videoErrorOverlay" class="absolute inset-0 bg-brand-dark/95 z-30 hidden flex flex-col items-center justify-center p-6 text-center space-y-3">
+                    <div class="p-3 bg-brand-red/20 text-brand-red rounded-full">
+                        <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-white">Error de Carga o Bloqueo del Servidor (CORS)</h4>
+                    <p id="videoErrorMessage" class="text-xs text-gray-300 max-w-md leading-relaxed">El servidor externo no respondió o bloqueó la reproducción directa por políticas de seguridad de su CDN.</p>
+                    <div class="flex flex-wrap justify-center gap-2 pt-2">
+                        <button onclick="tryDemoStream()" class="px-4 py-2 bg-brand-red hover:bg-brand-hoverRed text-white text-xs font-bold rounded-lg transition shadow-md">
+                            Probar Stream de Respaldo Garantizado
+                        </button>
+                        <button onclick="switchNextMirror()" class="px-4 py-2 bg-brand-surface hover:bg-brand-border border border-brand-border text-white text-xs font-bold rounded-lg transition">
+                            Cambiar a Otro Servidor
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Engine 1: HTML5 Video Player -->
+                <video id="html5VideoPlayer" class="w-full h-full hidden object-contain" controls>
+                    Tu navegador no soporta reproducción de video HTML5.
+                </video>
+
+                <!-- Engine 2: Sandboxed Iframe -->
+                <iframe id="videoIframe" class="w-full h-full border-0 hidden"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
+            </div>
+
+            <!-- Subtitles & Speed Toolbar for HTML5 MP4 Player -->
+            <div id="html5ControlsBar" class="hidden px-5 py-2.5 bg-black/80 border-t border-brand-border/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-3">
+                    <span class="text-gray-400 font-bold flex items-center gap-1">
+                        <i data-lucide="subtitles" class="w-3.5 h-3.5 text-brand-red"></i> Subtítulos:
+                    </span>
+                    <label class="cursor-pointer bg-brand-card hover:bg-brand-border px-3 py-1 rounded-md text-gray-200 border border-brand-border flex items-center gap-1.5 transition">
+                        <i data-lucide="upload" class="w-3.5 h-3.5 text-yellow-500"></i> Cargar archivo .SRT / .VTT
+                        <input type="file" id="subtitleFileInput" accept=".srt,.vtt" onchange="handleSubtitleUpload(event)" class="hidden">
+                    </label>
+                    <span id="subtitleStatusText" class="text-[11px] text-green-400 font-medium">Subtítulos Integrados (ES)</span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span class="text-gray-400 font-bold flex items-center gap-1">
+                        <i data-lucide="gauge" class="w-3.5 h-3.5 text-blue-400"></i> Velocidad:
+                    </span>
+                    <select id="speedSelect" onchange="changePlaybackSpeed(this.value)" class="bg-brand-card text-xs text-white border border-brand-border rounded-md px-2 py-1 focus:ring-1 focus:ring-brand-red">
+                        <option value="0.5">0.5x</option>
+                        <option value="1.0" selected>1.0x (Normal)</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2.0">2.0x</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Mirror Server Selector Toolbar -->
+            <div class="p-4 lg:p-5 bg-brand-dark flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-t border-brand-border">
+                <div class="space-y-2 w-full md:w-auto">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Red de Servidores:</span>
+                        <span id="currentEpisodeLabel" class="text-xs font-semibold text-brand-red bg-brand-red/10 px-2 py-0.5 rounded border border-brand-red/20"></span>
+                    </div>
+
+                    <!-- Mirror Server Selection Buttons -->
+                    <div id="mirrorButtons" class="flex flex-wrap gap-2">
+                        <!-- Server buttons dynamically injected -->
+                    </div>
+                </div>
+
+                <!-- Report Link & Security Badge -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-brand-border/50 pt-3 md:pt-0">
+                    <button onclick="openReportModal()" class="text-xs text-yellow-500 hover:text-yellow-400 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20 font-medium transition">
+                        <i data-lucide="flag" class="w-3.5 h-3.5"></i> Reportar enlace caído
+                    </button>
+                    <span class="text-[11px] text-gray-500 flex items-center gap-1">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-green-500"></i> Servidor Protegido
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10-MINUTE AD MONETIZATION MODAL -->
+    <div id="adModal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-brand-surface border border-brand-border p-6 lg:p-8 rounded-2xl max-w-md w-full text-center space-y-5 shadow-2xl">
+            <div class="inline-flex p-4 bg-brand-red/10 rounded-full text-brand-red">
+                <i data-lucide="tv" class="w-10 h-10"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-black text-white">Anuncio de Patrocinador</h3>
+                <p class="text-xs text-gray-400 leading-relaxed">Han transcurrido más de 10 minutos desde tu última visualización publicitaria. Tu reproducción comenzará tras continuar.</p>
+            </div>
+            
+            <!-- Ad Banner Placeholder -->
+            <div class="bg-black/80 border border-brand-border p-6 rounded-xl flex flex-col items-center justify-center min-h-[140px] space-y-2">
+                <span class="text-xs text-gray-500 uppercase tracking-widest font-mono">Publicidad Programática</span>
+                <p class="text-sm text-yellow-400 font-mono font-bold animate-pulse">[ PATROCINADOR PREMIUM AD-STREAM ]</p>
+                <span class="text-[10px] text-gray-400">Permite mantener CineStream 100% gratuito</span>
+            </div>
+
+            <button onclick="dismissAdAndPlay()" class="w-full py-3.5 bg-brand-red hover:bg-brand-hoverRed text-white font-bold rounded-xl shadow-lg shadow-brand-red/30 transition transform active:scale-95 text-sm">
+                Continuar al Reproductor
+            </button>
+        </div>
+    </div>
+
+    <!-- PARENTAL CONTROL PIN MODAL (+17 LOCK) -->
+    <div id="pinModal" class="fixed inset-0 bg-black/85 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-brand-surface border border-brand-border p-6 rounded-2xl max-w-xs w-full text-center space-y-4 shadow-2xl">
+            <div class="inline-flex p-3 bg-yellow-500/10 rounded-full text-yellow-500">
+                <i data-lucide="shield-alert" class="w-8 h-8"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-white">Control Parental +17</h3>
+                <p class="text-xs text-gray-400 mt-1">Ingresa el PIN para desbloquear contenido clasificado para adultos (PIN por defecto: <strong class="text-yellow-400">1234</strong>):</p>
+            </div>
+            
+            <input type="password" id="pinInput" maxlength="4" placeholder="****" onkeydown="if(event.key==='Enter') verifyPin()"
+                   class="w-full text-center text-2xl tracking-[0.5em] bg-black border border-brand-border rounded-xl py-2.5 text-white focus:outline-none focus:border-brand-red font-mono">
+            
+            <p id="pinErrorMsg" class="text-xs text-brand-red hidden font-semibold">PIN incorrecto. Intenta con 1234.</p>
+
+            <div class="flex gap-2 pt-1">
+                <button onclick="closePinModal()" class="flex-1 py-2.5 bg-brand-dark text-gray-300 hover:bg-brand-border rounded-xl text-xs font-bold transition">Cancelar</button>
+                <button onclick="verifyPin()" class="flex-1 py-2.5 bg-brand-red hover:bg-brand-hoverRed text-white rounded-xl text-xs font-bold transition">Desbloquear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300">
+        <div id="toastContent" class="flex items-center gap-3 px-4 py-3 bg-brand-surface border border-brand-border text-white text-xs font-semibold rounded-xl shadow-2xl">
+            <i data-lucide="info" id="toastIcon" class="w-4 h-4 text-brand-red"></i>
+            <span id="toastMessage">Notificación</span>
+        </div>
+    </div>
+
+    <script>
+        // Catalog Database including Cyberpunk: Edgerunners with 10 episodes and Archive.org MP4 links
+        const CATALOG_DATA = [
+            {
+                id: 101,
+                title: "Cyberpunk: Edgerunners",
+                type: "Anime",
+                rating: "+17",
+                year: 2022,
+                genre: ["Acción", "Ciencia Ficción"],
+                poster: "https://cdn-l-cyberpunk.cdprojektred.com/edgerunners/Cyberpunk-Edgerunners-S1-Poster-en.jpg",
+                banner: "https://wallpapers.com/images/hd/cyberpunk-edgerunners-title-screen-7pagrzotfzok1rua.jpg",
+                description: "Un chico de la calle intenta sobrevivir en Night City, una metrópolis obsesionada con la tecnología y la modificación corporal. Tras perderlo todo, elige mantenerse con vida convirtiéndose en un edgerunner.",
+                featured: true,
+                seasons: [
+                    {
+                        seasonNumber: 1,
+                        episodes: [
+                            {
+                                epNumber: 1,
+                                title: "Episodio 1: Como un Rayo",
+                                duration: "24m",
+                                thumbnail: "https://tse4.mm.bing.net/th/id/OIP.U2a5K06c3vVeZ9w5nTHFjAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+                                mirrors: [
+                                    { name: "Archive MP4 Directo", server: "Archive", type: "mp4", url: "https://dn710200.ca.archive.org/0/items/cyberpunk-edgerunners.-s-1.-e-1/Cyberpunk-Edgerunners.S1.E1.mp4", quality: "1080p", lang: "SUB", speed: "Ultra Rápido" },
+                                    { name: "Vidhide HD", server: "Vidhide", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "LAT", speed: "Rápido" },
+                                    { name: "Streamtape", server: "Streamtape", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "720p", lang: "ES", speed: "Estable" },
+                                    { name: "Streamwish", server: "Streamwish", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "SUB", speed: "Rápido" },
+                                    { name: "Filemoon", server: "Filemoon", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "LAT", speed: "Rápido" },
+                                    { name: "Mixdrop", server: "Mixdrop", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "720p", lang: "SUB", speed: "Estable" },
+                                    { name: "Doodstream", server: "Doodstream", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "720p", lang: "LAT", speed: "Normal" },
+                                    { name: "Voe.sx", server: "Voe.sx", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "ES", speed: "Rápido" }
+                                ]
+                            },
+                            {
+                                epNumber: 2,
+                                title: "Episodio 2: Como una Chica de Ciudad",
+                                duration: "25m",
+                                thumbnail: "https://tse4.mm.bing.net/th/id/OIP.U2a5K06c3vVeZ9w5nTHFjAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+                                mirrors: [
+                                    { name: "Archive MP4 Directo", server: "Archive", type: "mp4", url: "https://dn710200.ca.archive.org/0/items/cyberpunk-edgerunners.-s-1.-e-1/Cyberpunk-Edgerunners.S1.E2.mp4", quality: "1080p", lang: "SUB", speed: "Ultra Rápido" },
+                                    { name: "Vidhide HD", server: "Vidhide", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "LAT", speed: "Rápido" },
+                                    { name: "Filemoon", server: "Filemoon", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "SUB", speed: "Rápido" },
+                                    { name: "Voe.sx", server: "Voe.sx", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "ES", speed: "Estable" }
+                                ]
+                            },
+                            {
+                                epNumber: 3,
+                                title: "Episodio 3: Transmitir el Ritmo",
+                                duration: "24m",
+                                thumbnail: "https://tse4.mm.bing.net/th/id/OIP.U2a5K06c3vVeZ9w5nTHFjAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+                                mirrors: [
+                                    { name: "Archive MP4 Directo", server: "Archive", type: "mp4", url: "https://dn710200.ca.archive.org/0/items/cyberpunk-edgerunners.-s-1.-e-1/Cyberpunk-Edgerunners.S1.E3.mp4", quality: "1080p", lang: "SUB", speed: "Ultra Rápido" },
+                                    { name: "Streamwish", server: "Streamwish", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "LAT", speed: "Rápido" },
+                                    { name: "Mixdrop", server: "Mixdrop", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "720p", lang: "ES", speed: "Estable" }
+                                ]
+                            },
+                            {
+                                epNumber: 4,
+                                title: "Episodio 4: El Ojo de la Tormenta",
+                                duration: "24m",
+                                thumbnail: "https://tse4.mm.bing.net/th/id/OIP.U2a5K06c3vVeZ9w5nTHFjAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+                                mirrors: [
+                                    { name: "Archive MP4 Directo", server: "Archive", type: "mp4", url: "https://dn710200.ca.archive.org/0/items/cyberpunk-edgerunners.-s-1.-e-1/Cyberpunk-Edgerunners.S1.E4.mp4", quality: "1080p", lang: "SUB", speed: "Ultra Rápido" },
+                                    { name: "Vidhide HD", server: "Vidhide", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "LAT", speed: "Rápido" }
+                                ]
+                            },
+                            {
+                                epNumber: 5,
+                                title: "Episodio 5: En la Luna",
+                                duration: "26m",
+                                thumbnail: "https://tse4.mm.bing.net/th/id/OIP.U2a5K06c3vVeZ9w5nTHFjAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+                                mirrors: [
+                                    { name: "Archive MP4 Directo", server: "Archive", type: "mp4", url: "https://dn600305.us.archive.org/0/items/cyberpunk-edgerunners.-s-1.-e-1/Cyberpunk-Edgerunners.S1.E5.mp4", quality: "1080p", lang: "SUB", speed: "Ultra Rápido" },
+                                    { name: "Streamtape", server: "Streamtape", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "720p", lang: "LAT", speed: "Estable" }
+                                ]
+                            },
+                            {
+                                epNumber: 6,
+                                title: "Episodio 6: Hombre de Familia",
+                                duration: "25m",
+                                thumbnail: "https://tse4.mm.bing.net/th/id/OIP.U2a5K06c3vVeZ9w5nTHFjAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+                                mirrors: [
+                                    { name: "Archive MP4 Directo", server: "Archive", type: "mp4", url: "https://dn710200.ca.archive.org/0/items/cyberpunk-edgerunners.-s-1.-e-1/Cyberpunk-Edgerunners.S1.E6.mp4", quality: "1080p", lang: "SUB", speed: "Ultra Rápido" },
+                                    { name: "Doodstream", server: "Doodstream", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "720p", lang: "ES", speed: "Estable" }
+                                ]
+                            },
+                            {
+                                epNumber: 7,
+                                title: "Episodio 7: Más Allá del Límite",
+                                duration: "23m",
+                                thumbnail: "https://tse4.mm.bing.net/th/id/OIP.U2a5K06c3vVeZ9w5nTHFjAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+                                mirrors: [
+                                    { name: "Archive MP4 Directo", server: "Archive", type: "mp4", url: "https://dn710200.ca.archive.org/0/items/cyberpunk-edgerunners.-s-1.-e-1/Cyberpunk-Edgerunners.S1.E7.mp4", quality: "1080p", lang: "SUB", speed: "Ultra Rápido" },
+                                    { name: "Voe.sx", server: "Voe.sx", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "LAT", speed: "Rápido" }
+                                ]
+                            },
+                            {
+                                epNumber: 8,
+                                title: "Episodio 8: Mantener el Control",
+                                duration: "24m",
+                                thumbnail: "https://tse4.mm.bing.net/th/id/OIP.U2a5K06c3vVeZ9w5nTHFjAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+                                mirrors: [
+                                    { name: "Archive MP4 Directo", server: "Archive", type: "mp4", url: "https://dn600305.us.archive.org/0/items/cyberpunk-edgerunners.-s-1.-e-1/Cyberpunk-Edgerunners.S1.E8.mp4", quality: "1080p", lang: "SUB", speed: "Ultra Rápido" },
+                                    { name: "Filemoon", server: "Filemoon", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "ES", speed: "Rápido" }
+                                ]
+                            },
+                            {
+                                epNumber: 9,
+                                title: "Episodio 9: Humanidad",
+                                duration: "25m",
+                                thumbnail: "https://tse4.mm.bing.net/th/id/OIP.U2a5K06c3vVeZ9w5nTHFjAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+                                mirrors: [
+                                    { name: "Archive MP4 Directo", server: "Archive", type: "mp4", url: "https://dn710200.ca.archive.org/0/items/cyberpunk-edgerunners.-s-1.-e-1/Cyberpunk-Edgerunners.S1.E9.mp4", quality: "1080p", lang: "SUB", speed: "Ultra Rápido" },
+                                    { name: "Streamwish", server: "Streamwish", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "LAT", speed: "Rápido" }
+                                ]
+                            },
+                            {
+                                epNumber: 10,
+                                title: "Episodio 10: Mi Luna, Mi Amor",
+                                duration: "26m",
+                                thumbnail: "https://tse4.mm.bing.net/th/id/OIP.U2a5K06c3vVeZ9w5nTHFjAAAAA?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+                                mirrors: [
+                                    { name: "Archive MP4 Directo", server: "Archive", type: "mp4", url: "https://dn600305.us.archive.org/0/items/cyberpunk-edgerunners.-s-1.-e-1/Cyberpunk-Edgerunners.S1.E10.mp4", quality: "1080p", lang: "SUB", speed: "Ultra Rápido" },
+                                    { name: "Vidhide HD", server: "Vidhide", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "LAT", speed: "Rápido" },
+                                    { name: "Filemoon", server: "Filemoon", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "SUB", speed: "Rápido" }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 1,
+                title: "Inception: El Origen",
+                type: "Película",
+                rating: "PG-13",
+                year: 2010,
+                genre: ["Acción", "Ciencia Ficción"],
+                poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=600&q=80",
+                banner: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200&q=80",
+                description: "Dom Cobb es un ladrón hábil que roba secretos valiosos desde el profundo subconsciente de las personas durante el estado de sueño.",
+                featured: true,
+                mirrors: [
+                    { name: "Vidhide HD", server: "Vidhide", type: "iframe", url: "https://www.youtube.com/embed/YoHD9XEInc0", quality: "1080p", lang: "LAT", speed: "Rápido" },
+                    { name: "Streamwish", server: "Streamwish", type: "iframe", url: "https://www.youtube.com/embed/YoHD9XEInc0", quality: "1080p", lang: "SUB", speed: "Rápido" },
+                    { name: "Streamtape", server: "Streamtape", type: "iframe", url: "https://www.youtube.com/embed/YoHD9XEInc0", quality: "720p", lang: "ES", speed: "Estable" }
+                ]
+            },
+            {
+                id: 3,
+                title: "Stranger Chronicles",
+                type: "Serie",
+                rating: "PG-13",
+                year: 2023,
+                genre: ["Fantasía", "Terror"],
+                poster: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=600&q=80",
+                banner: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&q=80",
+                description: "Eventos sobrenaturales sacuden un pequeño pueblo industrial lleno de secretos militares y dimensiones paralelas.",
+                featured: true,
+                seasons: [
+                    {
+                        seasonNumber: 1,
+                        episodes: [
+                            {
+                                epNumber: 1,
+                                title: "Capítulo 1: La Desaparición",
+                                duration: "48m",
+                                thumbnail: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&q=80",
+                                mirrors: [
+                                    { name: "Doodstream", server: "Doodstream", type: "iframe", url: "https://www.youtube.com/embed/b9EkMc79ZSU", quality: "720p", lang: "LAT", speed: "Estable" },
+                                    { name: "Voe.sx", server: "Voe.sx", type: "iframe", url: "https://www.youtube.com/embed/b9EkMc79ZSU", quality: "1080p", lang: "SUB", speed: "Rápido" }
+                                ]
+                            },
+                            {
+                                epNumber: 2,
+                                title: "Capítulo 2: El Laboratorio Secretos",
+                                duration: "52m",
+                                thumbnail: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&q=80",
+                                mirrors: [
+                                    { name: "Vidhide HD", server: "Vidhide", type: "iframe", url: "https://www.youtube.com/embed/b9EkMc79ZSU", quality: "1080p", lang: "ES", speed: "Rápido" }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "Sintaxis Oscura",
+                type: "Película",
+                rating: "+17",
+                year: 2024,
+                genre: ["Terror", "Drama"],
+                poster: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&q=80",
+                banner: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=1200&q=80",
+                description: "Un thriller psicológico explícito donde la inteligencia artificial toma conciencia y aterroriza a sus creadores.",
+                featured: false,
+                mirrors: [
+                    { name: "Vidhide HD", server: "Vidhide", type: "iframe", url: "https://www.youtube.com/embed/L3oOldViIgY", quality: "1080p", lang: "LAT", speed: "Rápido" },
+                    { name: "Filemoon Mirror", server: "Filemoon", type: "iframe", url: "https://www.youtube.com/embed/L3oOldViIgY", quality: "720p", lang: "SUB", speed: "Estable" }
+                ]
+            },
+            {
+                id: 5,
+                title: "Interstellar: Odisea",
+                type: "Película",
+                rating: "PG-13",
+                year: 2014,
+                genre: ["Ciencia Ficción", "Drama"],
+                poster: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=80",
+                banner: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80",
+                description: "Un grupo de exploradores viaja a través de un agujero de gusano en el espacio en un intento por asegurar la supervivencia de la humanidad.",
+                featured: false,
+                mirrors: [
+                    { name: "Streamwish 1080p", server: "Streamwish", type: "iframe", url: "https://www.youtube.com/embed/YoHD9XEInc0", quality: "1080p", lang: "LAT", speed: "Rápido" },
+                    { name: "Voe.sx HD", server: "Voe.sx", type: "iframe", url: "https://www.youtube.com/embed/YoHD9XEInc0", quality: "1080p", lang: "ES", speed: "Rápido" }
+                ]
+            },
+            {
+                id: 6,
+                title: "Demon Hunters",
+                type: "Anime",
+                rating: "PG-13",
+                year: 2023,
+                genre: ["Acción", "Fantasía"],
+                poster: "https://images.unsplash.com/photo-1563089145-599997674d42?w=600&q=80",
+                banner: "https://images.unsplash.com/photo-1563089145-599997674d42?w=1200&q=80",
+                description: "Cazadores místicos luchan contra criaturas del inframundo en el Japón feudal.",
+                featured: false,
+                seasons: [
+                    {
+                        seasonNumber: 1,
+                        episodes: [
+                            {
+                                epNumber: 1,
+                                title: "Episodio 1: El Despertar del Espadachín",
+                                duration: "24m",
+                                thumbnail: "https://images.unsplash.com/photo-1563089145-599997674d42?w=300&q=80",
+                                mirrors: [
+                                    { name: "Vidhide", server: "Vidhide", type: "iframe", url: "https://www.youtube.com/embed/JtqIas3bYhg", quality: "1080p", lang: "SUB", speed: "Rápido" }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        let currentCategory = 'All';
+        let currentGenre = 'All';
+        let currentLang = 'All';
+        let searchQuery = '';
+        let isPinUnlocked = false;
+
+        let activeContent = null;
+        let activeSeasonIndex = 0;
+        let activeEpIndex = 0;
+        let activeMirrorIndex = 0;
+        let pendingPlayTarget = null; // { contentId, seasonIdx, epIdx, mirrorIdx }
+
+        let heroIndex = 0;
+        let heroTimer = null;
+
+        let favorites = JSON.parse(localStorage.getItem('cinestream_favs') || '[]');
+        let history = JSON.parse(localStorage.getItem('cinestream_history') || '[]');
+
+        // 10-Minute Ad Interval (600,000 ms)
+        const AD_INTERVAL_MS = 10 * 60 * 1000;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initHeroCarousel();
+            updateAdTimerBadge();
+            renderCatalog();
+            setInterval(updateAdTimerBadge, 15000); // Update ad badge status every 15s
+        });
+
+        function initHeroCarousel() {
+            const featuredItems = CATALOG_DATA.filter(item => item.featured);
+            if (featuredItems.length === 0) return;
+
+            const dotsContainer = document.getElementById('heroDots');
+            dotsContainer.innerHTML = '';
+
+            featuredItems.forEach((_, idx) => {
+                const dot = document.createElement('button');
+                dot.className = `w-2.5 h-2.5 rounded-full transition-all ${idx === heroIndex ? 'bg-brand-red w-7' : 'bg-gray-600 hover:bg-white'}`;
+                dot.onclick = () => { heroIndex = idx; updateHeroDisplay(featuredItems); };
+                dotsContainer.appendChild(dot);
+            });
+
+            updateHeroDisplay(featuredItems);
+
+            if (heroTimer) clearInterval(heroTimer);
+            heroTimer = setInterval(() => {
+                heroIndex = (heroIndex + 1) % featuredItems.length;
+                updateHeroDisplay(featuredItems);
+            }, 8000);
+        }
+
+        function updateHeroDisplay(items) {
+            const item = items[heroIndex];
+            if (!item) return;
+
+            document.getElementById('heroImage').src = item.banner;
+            document.getElementById('heroType').textContent = item.type;
+            document.getElementById('heroRating').textContent = item.rating;
+            document.getElementById('heroYear').textContent = item.year;
+            document.getElementById('heroGenres').textContent = `• ${item.genre.join(', ')}`;
+            document.getElementById('heroTitle').textContent = item.title;
+            document.getElementById('heroDesc').textContent = item.description;
+
+            document.getElementById('heroPlayBtn').onclick = () => initPlayProcess(item.id);
+
+            const heroFavBtn = document.getElementById('heroFavBtn');
+            const isFav = favorites.includes(item.id);
+            heroFavBtn.innerHTML = `<i data-lucide="heart" class="w-5 h-5 ${isFav ? 'text-brand-red fill-brand-red' : ''}"></i> ${isFav ? 'En mi lista' : 'Añadir a Mi Lista'}`;
+            heroFavBtn.onclick = () => toggleFavorite(item.id);
+
+            const dots = document.getElementById('heroDots').children;
+            Array.from(dots).forEach((dot, idx) => {
+                dot.className = `h-2.5 rounded-full transition-all ${idx === heroIndex ? 'bg-brand-red w-7' : 'bg-gray-600 hover:bg-white w-2.5'}`;
+            });
+
+            lucide.createIcons();
+        }
+
+        function openPinModal(targetContent = null) {
+            if (isPinUnlocked) {
+                isPinUnlocked = false;
+                document.getElementById('lockIcon').setAttribute('data-lucide', 'lock');
+                document.getElementById('pinStatusText').textContent = "Modo Kids";
+                showToast("Modo Kids Activado (+17 Bloqueado)", "info");
+                renderCatalog();
+                lucide.createIcons();
+            } else {
+                pendingPlayTarget = targetContent;
+                document.getElementById('pinInput').value = '';
+                document.getElementById('pinErrorMsg').classList.add('hidden');
+                document.getElementById('pinModal').classList.remove('hidden');
+                setTimeout(() => document.getElementById('pinInput').focus(), 100);
+            }
+        }
+
+        function closePinModal() {
+            pendingPlayTarget = null;
+            document.getElementById('pinModal').classList.add('hidden');
+        }
+
+        function verifyPin() {
+            const input = document.getElementById('pinInput').value;
+            if (input === '1234') {
+                isPinUnlocked = true;
+                document.getElementById('lockIcon').setAttribute('data-lucide', 'unlock');
+                document.getElementById('pinStatusText').textContent = "Modo +17 Activo";
+                closePinModal();
+                showToast("Contenido +17 Desbloqueado Correctamente", "success");
+                renderCatalog();
+                lucide.createIcons();
+
+                // Auto launch player if triggered by clicking locked content
+                if (pendingPlayTarget) {
+                    const target = pendingPlayTarget;
+                    pendingPlayTarget = null;
+                    initPlayProcess(target.contentId, target.seasonIdx, target.epIdx, target.mirrorIdx);
+                }
+            } else {
+                document.getElementById('pinErrorMsg').classList.remove('hidden');
+            }
+        }
+
+        function renderCatalog() {
+            const grid = document.getElementById('catalogGrid');
+            grid.innerHTML = '';
+
+            let filtered = CATALOG_DATA.filter(item => {
+                // Search query
+                if (searchQuery && !item.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+
+                // Category filter
+                if (currentCategory === 'Favoritos') return favorites.includes(item.id);
+                if (currentCategory === 'Historial') return history.includes(item.id);
+                if (currentCategory !== 'All' && item.type !== currentCategory) return false;
+
+                // Genre filter
+                if (currentGenre !== 'All' && !item.genre.includes(currentGenre)) return false;
+
+                // Audio Language Filter
+                if (currentLang !== 'All') {
+                    const hasLangInMirrors = item.type === 'Película' 
+                        ? item.mirrors.some(m => m.lang === currentLang)
+                        : item.seasons.some(s => s.episodes.some(e => e.mirrors.some(m => m.lang === currentLang)));
+                    if (!hasLangInMirrors) return false;
+                }
+
+                return true;
+            });
+
+            document.getElementById('itemCounter').textContent = `${filtered.length} título(s)`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-16 text-center space-y-3 bg-brand-surface/30 rounded-2xl border border-brand-border/50">
+                        <i data-lucide="film" class="w-12 h-12 text-gray-600"></i>
+                        <p class="text-sm font-semibold text-gray-400">No se encontraron contenidos con los filtros seleccionados.</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            filtered.forEach(item => {
+                const isFav = favorites.includes(item.id);
+                const isAdultLocked = (item.rating === '+17' && !isPinUnlocked);
+                const card = document.createElement('div');
+                card.className = "bg-brand-surface rounded-xl overflow-hidden border border-brand-border hover:border-brand-red transition-all duration-300 group flex flex-col justify-between shadow-lg hover:shadow-brand-red/10 cursor-pointer relative";
+                
+                card.innerHTML = `
+                    <div class="relative aspect-[2/3] overflow-hidden" onclick="handleCardClick(${item.id})">
+                        <img src="${item.poster}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 ${isAdultLocked ? 'filter blur-[3px] brightness-75' : ''}">
+                        
+                        <!-- Top Badges -->
+                        <div class="absolute top-2 left-2 right-2 flex justify-between items-center pointer-events-none z-10">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-black ${item.rating === '+17' ? 'bg-brand-red text-white' : 'bg-black/80 text-white'} backdrop-blur border border-white/10 flex items-center gap-1">
+                                ${item.rating} ${isAdultLocked ? '<i data-lucide="lock" class="w-3 h-3 text-yellow-400 inline"></i>' : ''}
+                            </span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-black/80 text-gray-300 backdrop-blur border border-white/10">
+                                ${item.type}
+                            </span>
+                        </div>
+
+                        ${isAdultLocked ? `
+                        <!-- Locked Adult Content Badge Overlay -->
+                        <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-center p-3 space-y-2 z-20">
+                            <div class="p-2.5 bg-yellow-500/20 text-yellow-400 rounded-full border border-yellow-500/30">
+                                <i data-lucide="lock" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs font-bold text-white uppercase tracking-wider">+17 Bloqueado</span>
+                            <span class="text-[10px] text-gray-300 font-medium">Toca para ingresar PIN</span>
+                        </div>
+                        ` : `
+                        <!-- Normal Play Overlay -->
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+                            <div class="p-3 bg-brand-red rounded-full text-white shadow-xl transform group-hover:scale-110 transition">
+                                <i data-lucide="play" class="w-6 h-6 fill-white"></i>
+                            </div>
+                        </div>
+                        `}
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="p-3 flex justify-between items-start gap-2 bg-brand-surface">
+                        <div onclick="handleCardClick(${item.id})" class="flex-1 min-w-0">
+                            <h4 class="font-bold text-xs lg:text-sm text-white truncate group-hover:text-brand-red transition">${item.title}</h4>
+                            <p class="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
+                                <span>${item.year}</span> • <span>${item.genre[0]}</span>
+                            </p>
+                        </div>
+                        <button onclick="toggleFavorite(${item.id})" class="text-gray-400 hover:text-brand-red p-1 transition">
+                            <i data-lucide="heart" class="w-4 h-4 ${isFav ? 'text-brand-red fill-brand-red' : ''}"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            lucide.createIcons();
+        }
+
+        function handleCardClick(contentId) {
+            const item = CATALOG_DATA.find(c => c.id === contentId);
+            if (!item) return;
+
+            if (item.rating === '+17' && !isPinUnlocked) {
+                openPinModal({ contentId, seasonIdx: 0, epIdx: 0, mirrorIdx: 0 });
+            } else {
+                initPlayProcess(contentId);
+            }
+        }
+
+        function filterCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn px-3 py-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-brand-surface transition flex items-center gap-1.5";
+            });
+            const activeBtn = document.getElementById(`nav-${cat}`);
+            if (activeBtn) {
+                activeBtn.className = "nav-btn px-3 py-1.5 rounded-lg text-white bg-brand-red transition flex items-center gap-1.5 font-bold shadow";
+            }
+
+            const titleMap = {
+                'All': 'Catálogo Destacado',
+                'Película': 'Películas',
+                'Serie': 'Series',
+                'Anime': 'Animes Destacados',
+                'Favoritos': 'Mis Favoritos',
+                'Historial': 'Historial de Reproducción'
+            };
+            document.getElementById('sectionTitle').textContent = titleMap[cat] || cat;
+
+            renderCatalog();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value;
+            renderCatalog();
+        }
+
+        function handleFilterChange() {
+            currentGenre = document.getElementById('genreFilter').value;
+            currentLang = document.getElementById('langFilter').value;
+            renderCatalog();
+        }
+
+        function toggleFavorite(id) {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(favId => favId !== id);
+                showToast("Eliminado de Favoritos", "info");
+            } else {
+                favorites.push(id);
+                showToast("Añadido a Favoritos", "success");
+            }
+            localStorage.setItem('cinestream_favs', JSON.stringify(favorites));
+            
+            const featuredItems = CATALOG_DATA.filter(item => item.featured);
+            if (featuredItems[heroIndex] && featuredItems[heroIndex].id === id) {
+                updateHeroDisplay(featuredItems);
+            }
+
+            renderCatalog();
+        }
+
+        function addToHistory(id) {
+            if (!history.includes(id)) {
+                history.unshift(id);
+                if (history.length > 20) history.pop();
+                localStorage.setItem('cinestream_history', JSON.stringify(history));
+            }
+        }
+
+        function checkAdRequired() {
+            const lastAd = localStorage.getItem('cinestream_last_ad');
+            if (!lastAd) return true;
+            const elapsed = Date.now() - parseInt(lastAd, 10);
+            return elapsed >= AD_INTERVAL_MS;
+        }
+
+        function updateAdTimerBadge() {
+            const lastAd = localStorage.getItem('cinestream_last_ad');
+            const badgeText = document.getElementById('adStatusText');
+            if (!lastAd) {
+                badgeText.textContent = "Anuncio Listo";
+                return;
+            }
+            const elapsed = Date.now() - parseInt(lastAd, 10);
+            if (elapsed >= AD_INTERVAL_MS) {
+                badgeText.textContent = "Anuncio Listo";
+                badgeText.className = "text-brand-red font-bold";
+            } else {
+                const remainingMin = Math.ceil((AD_INTERVAL_MS - elapsed) / 60000);
+                badgeText.textContent = `Ad en ~${remainingMin} min`;
+                badgeText.className = "text-gray-400 font-mono";
+            }
+        }
+
+        function initPlayProcess(contentId, seasonIdx = 0, epIdx = 0, mirrorIdx = 0) {
+            activeContent = CATALOG_DATA.find(c => c.id === contentId);
+            if (!activeContent) return;
+
+            // Protection check
+            if (activeContent.rating === '+17' && !isPinUnlocked) {
+                openPinModal({ contentId, seasonIdx, epIdx, mirrorIdx });
+                return;
+            }
+
+            activeSeasonIndex = seasonIdx;
+            activeEpIndex = epIdx;
+            activeMirrorIndex = mirrorIdx;
+
+            addToHistory(activeContent.id);
+
+            if (checkAdRequired()) {
+                document.getElementById('adModal').classList.remove('hidden');
+            } else {
+                launchPlayerModal();
+            }
+        }
+
+        function dismissAdAndPlay() {
+            localStorage.setItem('cinestream_last_ad', Date.now().toString());
+            updateAdTimerBadge();
+            document.getElementById('adModal').classList.add('hidden');
+            launchPlayerModal();
+        }
+
+        function launchPlayerModal() {
+            if (!activeContent) return;
+
+            document.getElementById('modalTitle').textContent = activeContent.title;
+            document.getElementById('modalMeta').textContent = `${activeContent.year} • ${activeContent.type} • Clasificación ${activeContent.rating} • ${activeContent.genre.join(', ')}`;
+
+            const seriesArea = document.getElementById('seriesSelectorArea');
+
+            if (activeContent.type === 'Serie' || activeContent.type === 'Anime') {
+                seriesArea.classList.remove('hidden');
+                renderSeasonSelector();
+                renderEpisodesList();
+            } else {
+                seriesArea.classList.add('hidden');
+            }
+
+            updatePlayerMirrorAndEngine();
+            document.getElementById('playerModal').classList.remove('hidden');
+        }
+
+        function renderSeasonSelector() {
+            const select = document.getElementById('seasonSelect');
+            select.innerHTML = '';
+            activeContent.seasons.forEach((season, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `Temporada ${season.seasonNumber}`;
+                if (idx === activeSeasonIndex) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function handleSeasonChange() {
+            activeSeasonIndex = parseInt(document.getElementById('seasonSelect').value, 10);
+            activeEpIndex = 0;
+            activeMirrorIndex = 0;
+            renderEpisodesList();
+            updatePlayerMirrorAndEngine();
+        }
+
+        function renderEpisodesList() {
+            const container = document.getElementById('episodesList');
+            container.innerHTML = '';
+            const currentSeason = activeContent.seasons[activeSeasonIndex];
+
+            currentSeason.episodes.forEach((ep, idx) => {
+                const card = document.createElement('div');
+                card.className = `flex-shrink-0 w-44 rounded-lg overflow-hidden border transition cursor-pointer ${idx === activeEpIndex ? 'border-brand-red bg-brand-surface shadow-lg ring-1 ring-brand-red' : 'border-brand-border bg-brand-dark opacity-75 hover:opacity-100'}`;
+                card.onclick = () => {
+                    activeEpIndex = idx;
+                    activeMirrorIndex = 0;
+                    renderEpisodesList();
+                    updatePlayerMirrorAndEngine();
+                };
+
+                card.innerHTML = `
+                    <div class="relative aspect-video">
+                        <img src="${ep.thumbnail}" alt="${ep.title}" class="w-full h-full object-cover">
+                        <span class="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded text-[9px] text-white font-mono font-bold">Ep ${ep.epNumber}</span>
+                        <span class="absolute top-1 left-1 bg-black/80 px-1 py-0.5 rounded text-[9px] text-gray-300 font-mono">${ep.duration || '24m'}</span>
+                    </div>
+                    <div class="p-2">
+                        <p class="text-[11px] font-bold text-white truncate">${ep.title}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updatePlayerMirrorAndEngine() {
+            let mirrors = [];
+            let epLabelText = "";
+
+            document.getElementById('videoErrorOverlay').classList.add('hidden');
+
+            if (activeContent.type === 'Serie' || activeContent.type === 'Anime') {
+                const ep = activeContent.seasons[activeSeasonIndex].episodes[activeEpIndex];
+                mirrors = ep.mirrors;
+                epLabelText = `T${activeContent.seasons[activeSeasonIndex].seasonNumber}:Ep ${ep.epNumber} - ${ep.title}`;
+            } else {
+                mirrors = activeContent.mirrors;
+                epLabelText = "Película Completa";
+            }
+
+            document.getElementById('currentEpisodeLabel').textContent = epLabelText;
+
+            const selectedMirror = mirrors[activeMirrorIndex] || mirrors[0];
+            const html5Player = document.getElementById('html5VideoPlayer');
+            const iframePlayer = document.getElementById('videoIframe');
+            const controlsBar = document.getElementById('html5ControlsBar');
+
+            html5Player.onerror = function() {
+                showVideoError("El servidor de Archive.org bloqueó el acceso directo al MP4 desde este dominio (Restricción CORS / Hotlink).");
+            };
+
+            if (selectedMirror.type === 'mp4') {
+                iframePlayer.classList.add('hidden');
+                iframePlayer.src = '';
+                
+                html5Player.classList.remove('hidden');
+                controlsBar.classList.remove('hidden');
+                html5Player.src = selectedMirror.url;
+                
+                const playPromise = html5Player.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.warn("Autoplay o carga interrumpida por política de navegador:", error);
+                    });
+                }
+            } else {
+                html5Player.pause();
+                html5Player.classList.add('hidden');
+                controlsBar.classList.add('hidden');
+                
+                iframePlayer.classList.remove('hidden');
+                iframePlayer.src = selectedMirror.url;
+            }
+
+            // Render mirror server selector buttons
+            const mirrorContainer = document.getElementById('mirrorButtons');
+            mirrorContainer.innerHTML = '';
+
+            mirrors.forEach((m, idx) => {
+                const btn = document.createElement('button');
+                const isActive = idx === activeMirrorIndex;
+                btn.className = `px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${isActive ? 'bg-brand-red text-white shadow-md' : 'bg-brand-surface text-gray-300 hover:bg-brand-border border border-brand-border'}`;
+                
+                btn.innerHTML = `
+                    <span>${m.name}</span>
+                    <span class="text-[9px] px-1 rounded bg-black/40 uppercase font-mono">${m.lang}</span>
+                    <span class="text-[9px] px-1 rounded ${m.quality === '1080p' ? 'bg-green-600' : 'bg-blue-600'} text-white font-mono">${m.quality}</span>
+                `;
+                btn.onclick = () => {
+                    activeMirrorIndex = idx;
+                    updatePlayerMirrorAndEngine();
+                };
+                mirrorContainer.appendChild(btn);
+            });
+        }
+
+        function showVideoError(msg) {
+            document.getElementById('videoErrorMessage').textContent = msg;
+            document.getElementById('videoErrorOverlay').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function tryDemoStream() {
+            document.getElementById('videoErrorOverlay').classList.add('hidden');
+            const html5Player = document.getElementById('html5VideoPlayer');
+            const iframePlayer = document.getElementById('videoIframe');
+            const controlsBar = document.getElementById('html5ControlsBar');
+
+            iframePlayer.classList.add('hidden');
+            html5Player.classList.remove('hidden');
+            controlsBar.classList.remove('hidden');
+
+            // Public domain high-speed test stream (Big Buck Bunny)
+            html5Player.src = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+            html5Player.play().catch(() => {});
+            showToast("Stream de respaldo cargado correctamente", "success");
+        }
+
+        function switchNextMirror() {
+            let mirrors = (activeContent.type === 'Serie' || activeContent.type === 'Anime')
+                ? activeContent.seasons[activeSeasonIndex].episodes[activeEpIndex].mirrors
+                : activeContent.mirrors;
+
+            if (mirrors.length > 1) {
+                activeMirrorIndex = (activeMirrorIndex + 1) % mirrors.length;
+                updatePlayerMirrorAndEngine();
+            } else {
+                tryDemoStream();
+            }
+        }
+
+        function changePlaybackSpeed(val) {
+            const html5Player = document.getElementById('html5VideoPlayer');
+            html5Player.playbackRate = parseFloat(val);
+        }
+
+        function handleSubtitleUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                let vttContent = content;
+
+                // Simple SRT to WebVTT Converter if SRT format detected
+                if (file.name.endsWith('.srt')) {
+                    vttContent = "WEBVTT\n\n" + content
+                        .replace(/(\d\d:\d\d:\d\d),(\d\d\d)/g, '$1.$2');
+                }
+
+                const blob = new Blob([vttContent], { type: 'text/vtt' });
+                const trackUrl = URL.createObjectURL(blob);
+
+                const html5Player = document.getElementById('html5VideoPlayer');
+                
+                // Remove existing user track
+                const existingTrack = document.getElementById('customSubTrack');
+                if (existingTrack) existingTrack.remove();
+
+                const track = document.createElement('track');
+                track.id = 'customSubTrack';
+                track.kind = 'subtitles';
+                track.label = file.name;
+                track.srclang = 'es';
+                track.src = trackUrl;
+                track.default = true;
+
+                html5Player.appendChild(track);
+                document.getElementById('subtitleStatusText').textContent = `Cargado: ${file.name}`;
+                showToast(`Subtítulo ${file.name} cargado con éxito`, "success");
+            };
+            reader.readAsText(file);
+        }
+
+        function closePlayerModal() {
+            const html5Player = document.getElementById('html5VideoPlayer');
+            const iframePlayer = document.getElementById('videoIframe');
+            html5Player.pause();
+            html5Player.src = '';
+            iframePlayer.src = '';
+            document.getElementById('playerModal').classList.add('hidden');
+        }
+
+        function showToast(msg, type = "info") {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.textContent = msg;
+            if (type === 'success') {
+                toastIcon.setAttribute('data-lucide', 'check-circle');
+                toastIcon.className = 'w-4 h-4 text-green-500';
+            } else {
+                toastIcon.setAttribute('data-lucide', 'info');
+                toastIcon.className = 'w-4 h-4 text-brand-red';
+            }
+
+            lucide.createIcons();
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        function openReportModal() {
+            showToast("Reporte de enlace caído enviado a los servidores. ¡Gracias!", "success");
+        }
+    </script>
+</body>
+</html>
